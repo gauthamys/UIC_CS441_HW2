@@ -5,12 +5,12 @@ import org.deeplearning4j.optimize.listeners.ScoreIterationListener
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
 import org.deeplearning4j.spark.impl.paramavg.ParameterAveragingTrainingMaster
 import org.nd4j.linalg.dataset.DataSet
-import slidingwindow.SlidingWindowWithPositionalEmbedding
+import slidingwindow.SlidingWindow
 import transformer.TransformerModel
 import util.StrUtil
 
 object Main {
-  private val slidingWindowWithPositionalEmbeddings = SlidingWindowWithPositionalEmbedding
+  private val slidingWindow = SlidingWindow
   private val strUtil = new StrUtil()
 
   private def createRDDFromData(data: List[DataSet], sc: SparkContext): RDD[DataSet] = {
@@ -19,30 +19,27 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("word-count").setMaster("local[*]")
+    val conf = new SparkConf().setAppName("llm-training").setMaster("local[2]").set("spark.executor.memory", "6g")
     val sc = new SparkContext(conf)
     val inputPath = "src/main/resources/ulyss12-sharded.txt"
     val sentences = sc.textFile(inputPath)
-
     // Create sliding windows of size 4 with positional embeddings
+
     val slidingWindows = sentences
       .flatMap(sentence => {
         val clean = strUtil.cleanLine(sentence)
-        slidingWindowWithPositionalEmbeddings.createSlidingWindowsWithPositionalEmbedding(clean.split(" "))
+        slidingWindow.createSlidingWindowsWithPositionalEmbedding(clean.split(" "))
       })
       .collect()
       .toList
     val slidingWindowRDD = createRDDFromData(slidingWindows, sc)
-    slidingWindows.foreach(window => {
-      println(window.getFeatures.shapeInfoToString())
-      println(window.getLabels.shapeInfoToString())
-    })
+
     // slidingWindows is a List[DataSet] which can be used to train the LLM
     // Output the number of sliding windows created
     println(s"Number of sliding windows with positional embeddings: ${slidingWindows.size}")
 
     // Create the Transformer model configuration
-    val transformerConfig = new TransformerModel().createTransformerModel(128, 64, 10)
+    val transformerConfig = TransformerModel.createTransformerModel()
     val trainingMaster = new ParameterAveragingTrainingMaster.Builder(2)  // Batch size per worker
       .averagingFrequency(5)   // Synchronize every 5 iterations
       .workerPrefetchNumBatches(2)  // Prefetch batches to improve performance
@@ -57,9 +54,8 @@ object Main {
 
     // Train the model on the RDD
     val numEpochs = 5
-    for (epoch <- 0 until numEpochs) {
+    for(_ <- 0 until numEpochs) {
       sparkModel.fit(slidingWindowRDD)
-      println(s"Completed epoch $epoch")
     }
     println("Training complete.")
 

@@ -1,32 +1,38 @@
 package transformer
 
-import org.deeplearning4j.nn.conf.{MultiLayerConfiguration, NeuralNetConfiguration}
-import org.deeplearning4j.nn.conf.layers.{DenseLayer, OutputLayer}
-import org.nd4j.linalg.activations.Activation
-import org.nd4j.linalg.learning.config.Adam
-import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction
 
-class TransformerModel extends java.io.Serializable{
-  def createTransformerModel(inputSize: Int, hiddenSize: Int, outputSize: Int): MultiLayerConfiguration = {
-    new NeuralNetConfiguration.Builder()
-      .seed(42) // For reproducibility
-      .updater(new Adam(1e-3)) // Adam optimizer with learning rate 1e-3
+import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.MultiLayerConfiguration
+import org.deeplearning4j.nn.conf.NeuralNetConfiguration
+import org.deeplearning4j.nn.conf.layers.{DenseLayer, OutputLayer}
+import org.deeplearning4j.nn.weights.WeightInit
+import org.nd4j.linalg.activations.Activation
+import org.nd4j.linalg.lossfunctions.LossFunctions
+
+
+object TransformerModel extends java.io.Serializable{
+  def createTransformerModel(): MultiLayerConfiguration = {
+    val numInputs = 300 * 100 // 300x100 flattened input
+    val numOutputs = 100       // Output size is 1x100
+    val hiddenLayerSize = 512  // Hidden layer size
+
+    val modelConfig: MultiLayerConfiguration = new NeuralNetConfiguration.Builder()
+      .seed(123) // Set a seed for reproducibility
+      .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
       .list()
       .layer(0, new DenseLayer.Builder()
-        .nIn(inputSize)
-        .nOut(hiddenSize)
+        .nIn(numInputs)
+        .nOut(hiddenLayerSize)
         .activation(Activation.RELU)
+        .weightInit(WeightInit.XAVIER)
         .build())
-      .layer(1, new DenseLayer.Builder()
-        .nIn(hiddenSize)
-        .nOut(hiddenSize)
-        .activation(Activation.RELU)
-        .build())
-      .layer(2, new OutputLayer.Builder(LossFunction.MCXENT)
-        .activation(Activation.SOFTMAX)
-        .nIn(hiddenSize)
-        .nOut(outputSize)
+      .layer(1, new OutputLayer.Builder(LossFunctions.LossFunction.MSE)
+        .nIn(hiddenLayerSize)
+        .nOut(numOutputs)
+        .activation(Activation.IDENTITY)
+        .weightInit(WeightInit.XAVIER)
         .build())
       .build()
+    modelConfig
   }
 }
