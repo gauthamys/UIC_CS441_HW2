@@ -1,6 +1,10 @@
-## sbt project compiled with Scala 3
+# Distributed LLM Training and Sliding Window Data Preparation
 
-### Usage
+Author - Gautham Satyanarayana <br />
+Email - gsaty@uic.edu <br />
+UIN - 659368048
+
+## Usage
 
 This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
 

@@ -1,17 +1,14 @@
 package slidingwindow
 
 import com.typesafe.config.ConfigFactory
-import org.apache.spark.{SparkConf, SparkContext}
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.dataset.DataSet
 import org.nd4j.linalg.factory.Nd4j
-import util.StrUtil
 
 object SlidingWindowWithPositionalEmbedding {
   private val conf = ConfigFactory.load()
   private val windowSize = conf.getInt("SlidingWindow.windowSize")
   private val slideLength = conf.getInt("SlidingWindow.slideLength")
-  private val strUtil = StrUtil()
 
   // Dummy method to simulate tokenization and embedding (replace with actual embedding code)
   private def tokenizeAndEmbed(tokens: Array[String]): INDArray = {
@@ -36,8 +33,8 @@ object SlidingWindowWithPositionalEmbedding {
   }
 
   // Create sliding windows for inputs and targets with positional embeddings
-  private def createSlidingWindowsWithPositionalEmbedding(tokens: Array[String]): List[DataSet] = {
-    (0 until tokens.length - windowSize by slideLength).map { i =>
+  def createSlidingWindowsWithPositionalEmbedding(tokens: Array[String]): List[DataSet] = {
+    val res = (0 until tokens.length - windowSize by slideLength).map { i =>
       // Extract input window (windowSize tokens)
       val inputWindow = tokens.slice(i, i + windowSize)
 
@@ -55,27 +52,9 @@ object SlidingWindowWithPositionalEmbedding {
       val targetEmbedding = tokenizeAndEmbed(Array(targetToken))
 
       // Add to dataset
-      DataSet(positionAwareEmbedding, targetEmbedding)
+      new DataSet(positionAwareEmbedding, targetEmbedding)
     }.toList
-  }
-
-  def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("word-count").setMaster("local[*]")
-    val sc = new SparkContext(conf)
-    val inputPath = "src/main/resources/ulyss12-sharded.txt"
-
-    val sentences = sc.textFile(inputPath)
-
-    // Create sliding windows of size 4 with positional embeddings
-    val slidingWindows = sentences
-      .flatMap(sentence => {
-        val clean = strUtil.cleanLine(sentence)
-        createSlidingWindowsWithPositionalEmbedding(clean.split(" "))
-      })
-      .collect()
-      .toList
-
-    // Output the number of sliding windows created
-    println(s"Number of sliding windows with positional embeddings: ${slidingWindows.size}")
+    println(res.length)
+    res
   }
 }

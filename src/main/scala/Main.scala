@@ -1,15 +1,68 @@
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener
+import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
+import org.deeplearning4j.spark.impl.paramavg.ParameterAveragingTrainingMaster
+import org.nd4j.linalg.dataset.DataSet
+import slidingwindow.SlidingWindowWithPositionalEmbedding
+import transformer.TransformerModel
+import util.StrUtil
 
 object Main {
-//  private val slidingWindowExamples = new SlidingWindow()
+  private val slidingWindowWithPositionalEmbeddings = SlidingWindowWithPositionalEmbedding
+  private val strUtil = new StrUtil()
+
+  private def createRDDFromData(data: List[DataSet], sc: SparkContext): RDD[DataSet] = {
+    // Parallelize your data into a distributed RDD
+    sc.parallelize(data)
+  }
+
   def main(args: Array[String]): Unit = {
-    // set spark context
-//    val conf = new SparkConf().setAppName("word-count").setMaster("local[*]")
-//    val sc = new SparkContext(conf)
-//    val inputPath = "src/main/resources/ulyss12-sharded.txt"
-//
-//    sc.stop()
-    println("main")
+    val conf = new SparkConf().setAppName("word-count").setMaster("local[*]")
+    val sc = new SparkContext(conf)
+    val inputPath = "src/main/resources/ulyss12-sharded.txt"
+    val sentences = sc.textFile(inputPath)
+
+    // Create sliding windows of size 4 with positional embeddings
+    val slidingWindows = sentences
+      .flatMap(sentence => {
+        val clean = strUtil.cleanLine(sentence)
+        slidingWindowWithPositionalEmbeddings.createSlidingWindowsWithPositionalEmbedding(clean.split(" "))
+      })
+      .collect()
+      .toList
+    val slidingWindowRDD = createRDDFromData(slidingWindows, sc)
+    slidingWindows.foreach(window => {
+      println(window.getFeatures.shapeInfoToString())
+      println(window.getLabels.shapeInfoToString())
+    })
+    // slidingWindows is a List[DataSet] which can be used to train the LLM
+    // Output the number of sliding windows created
+    println(s"Number of sliding windows with positional embeddings: ${slidingWindows.size}")
+
+    // Create the Transformer model configuration
+    val transformerConfig = new TransformerModel().createTransformerModel(128, 64, 10)
+    val trainingMaster = new ParameterAveragingTrainingMaster.Builder(2)  // Batch size per worker
+      .averagingFrequency(5)   // Synchronize every 5 iterations
+      .workerPrefetchNumBatches(2)  // Prefetch batches to improve performance
+      .batchSizePerWorker(2)   // Batch size used by each Spark worker
+      .build()
+
+    // Wrap the model configuration with SparkDl4jMultiLayer for distributed training
+    val sparkModel = new SparkDl4jMultiLayer(sc, transformerConfig, trainingMaster)
+
+    // Set a listener to print score every 10 iterations
+    sparkModel.setListeners(new ScoreIterationListener(10))
+
+    // Train the model on the RDD
+    val numEpochs = 5
+    for (epoch <- 0 until numEpochs) {
+      sparkModel.fit(slidingWindowRDD)
+      println(s"Completed epoch $epoch")
+    }
+    println("Training complete.")
+
+    sc.stop()
   }
 }
