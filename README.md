@@ -1,4 +1,4 @@
-# Distributed LLM Training and Sliding Window Data Preparation
+# Distributed LLM Training
 
 Author - Gautham Satyanarayana <br />
 Email - gsaty@uic.edu <br />

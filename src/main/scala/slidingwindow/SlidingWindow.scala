@@ -66,8 +66,9 @@ object SlidingWindow {
 
       // Convert the target token into an embedding
       val targetEmbedding = tokenizeAndEmbed(Array(targetToken))
-
+      //println(positionAwareEmbedding, targetEmbedding)
       // Add to dataset
+      println(positionAwareEmbedding, targetEmbedding)
       new DataSet(positionAwareEmbedding, targetEmbedding)
     }.toList
     res

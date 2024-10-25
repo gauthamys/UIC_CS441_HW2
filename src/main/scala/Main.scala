@@ -27,22 +27,21 @@ object Main {
     val slidingWindows = sentences
       .flatMap(sentence => {
         val clean = strUtil.cleanLine(sentence)
-        slidingWindow.createSlidingWindowsWithPositionalEmbedding(clean.split(" "))
+        slidingWindow.createSlidingWindowsWithPositionalEmbedding(clean)
       })
       .collect()
       .toList
     val slidingWindowRDD = createRDDFromData(slidingWindows, sc)
 
-    // slidingWindows is a List[DataSet] which can be used to train the LLM
     // Output the number of sliding windows created
     println(s"Number of sliding windows with positional embeddings: ${slidingWindows.size}")
 
     // Create the Transformer model configuration
     val transformerConfig = TransformerModel.createTransformerModel()
-    val trainingMaster = new ParameterAveragingTrainingMaster.Builder(1)  // Batch size per worker
+    val trainingMaster = new ParameterAveragingTrainingMaster.Builder(2)  // Batch size per worker
       .averagingFrequency(5)   // Synchronize every 5 iterations
-      .workerPrefetchNumBatches(1)  // Prefetch batches to improve performance
-      .batchSizePerWorker(1)   // Batch size used by each Spark worker
+      .workerPrefetchNumBatches(2)  // Prefetch batches to improve performance
+      .batchSizePerWorker(2)   // Batch size used by each Spark worker
       .build()
     println("training master built")
     // Wrap the model configuration with SparkDl4jMultiLayer for distributed training
@@ -53,7 +52,7 @@ object Main {
 
     // Train the model on the RDD
     val numEpochs = 5
-    for(_ <- 0 until numEpochs) {
+    for(i <- 0 until numEpochs) {
       println("the problem starts here")
       sparkModel.fit(slidingWindowRDD)
     }
