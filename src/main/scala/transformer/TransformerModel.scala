@@ -12,9 +12,9 @@ import org.nd4j.linalg.lossfunctions.LossFunctions
 
 object TransformerModel extends java.io.Serializable{
   def createTransformerModel(): MultiLayerConfiguration = {
-    val numInputs = 300 * 100 // 300x100 flattened input
-    val numOutputs = 100       // Output size is 1x100
-    val hiddenLayerSize = 512  // Hidden layer size
+    val numInputs = 1 // 300x100 flattened input
+    val hiddenLayerSize = 1  // Hidden layer size
+    val numOutputs = 1      // Output size is 1x100
 
     val modelConfig: MultiLayerConfiguration = new NeuralNetConfiguration.Builder()
       .seed(123) // Set a seed for reproducibility

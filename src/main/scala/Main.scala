@@ -40,12 +40,12 @@ object Main {
 
     // Create the Transformer model configuration
     val transformerConfig = TransformerModel.createTransformerModel()
-    val trainingMaster = new ParameterAveragingTrainingMaster.Builder(2)  // Batch size per worker
+    val trainingMaster = new ParameterAveragingTrainingMaster.Builder(1)  // Batch size per worker
       .averagingFrequency(5)   // Synchronize every 5 iterations
-      .workerPrefetchNumBatches(2)  // Prefetch batches to improve performance
-      .batchSizePerWorker(2)   // Batch size used by each Spark worker
+      .workerPrefetchNumBatches(1)  // Prefetch batches to improve performance
+      .batchSizePerWorker(1)   // Batch size used by each Spark worker
       .build()
-
+    println("training master built")
     // Wrap the model configuration with SparkDl4jMultiLayer for distributed training
     val sparkModel = new SparkDl4jMultiLayer(sc, transformerConfig, trainingMaster)
 
@@ -55,6 +55,7 @@ object Main {
     // Train the model on the RDD
     val numEpochs = 5
     for(_ <- 0 until numEpochs) {
+      println("the problem starts here")
       sparkModel.fit(slidingWindowRDD)
     }
     println("Training complete.")

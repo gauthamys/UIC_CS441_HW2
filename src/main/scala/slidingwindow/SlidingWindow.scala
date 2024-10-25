@@ -19,9 +19,9 @@ object SlidingWindow {
   private def tokenizeAndEmbed(tokens: Array[String]): INDArray = {
     // Assume each word is embedded as a 1x100 vector
     // get embedding from hw1
-    val embeddingMatrix = Nd4j.zeros(windowSize, 100)
+    val embeddingMatrix = Nd4j.zeros(tokens.length, 100)
     for (i <- tokens.indices) {
-      if (i < windowSize) {
+      if (i < tokens.length) {
         val word = tokens(i)
         val embedding = lookup.getOrElse(word, Array.fill(100)(0.0))
 
@@ -31,7 +31,6 @@ object SlidingWindow {
       }
     }
     embeddingMatrix
-    Nd4j.rand(tokens.length, 100)
   }
 
   // Compute sinusoidal positional embeddings for a given window size
