@@ -23,7 +23,6 @@ object Main {
     val sc = new SparkContext(conf)
     val inputPath = "src/main/resources/ulyss12-sharded.txt"
     val sentences = sc.textFile(inputPath)
-    // Create sliding windows of size 4 with positional embeddings
 
     val slidingWindows = sentences
       .flatMap(sentence => {
