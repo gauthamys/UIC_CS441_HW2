@@ -22,6 +22,7 @@ lazy val root = project
       "org.deeplearning4j" % "deeplearning4j-nlp" % "1.0.0-M2.1",
       "org.deeplearning4j" % "deeplearning4j-core" % "1.0.0-M2.1",
       "org.deeplearning4j" %% "dl4j-spark" % "1.0.0-M2.1",
+      "org.deeplearning4j" %% "dl4j-spark-parameterserver" % "1.0.0-M2.1",
 
       "org.nd4j" % "nd4j-native" % "1.0.0-M2.1",
       "org.nd4j" % "nd4j-native-platform" % "1.0.0-M2.1",

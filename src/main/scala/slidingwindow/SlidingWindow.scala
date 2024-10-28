@@ -6,7 +6,6 @@ import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.dataset.DataSet
 import org.nd4j.linalg.factory.Nd4j
 
-import java.util
 import scala.collection.convert.ImplicitConversions.`map AsScala`
 
 object SlidingWindow {
@@ -15,20 +14,13 @@ object SlidingWindow {
   private val slideLength = conf.getInt("SlidingWindow.slideLength")
   private val lookup = EmbeddingLoader.load()
 
-  // Dummy method to simulate tokenization and embedding (replace with actual embedding code)
   private def tokenizeAndEmbed(tokens: Array[String]): INDArray = {
-    // Assume each word is embedded as a 1x100 vector
     // get embedding from hw1
     val embeddingMatrix = Nd4j.zeros(tokens.length, 100)
     for (i <- tokens.indices) {
-      if (i < tokens.length) {
-        val word = tokens(i)
-        val embedding = lookup.getOrElse(word, Array.fill(100)(0.0))
-
-        if (embedding.length == 100) {
-          embeddingMatrix.putRow(i, Nd4j.create(embedding))
-        }
-      }
+      val word = tokens(i)
+      val embedding = lookup.getOrElse(word, Array.fill(100)(0.0))
+      embeddingMatrix.putRow(i, Nd4j.create(embedding))
     }
     embeddingMatrix
   }
@@ -50,6 +42,7 @@ object SlidingWindow {
 
   // Create sliding windows for inputs and targets with positional embeddings
   def createSlidingWindowsWithPositionalEmbedding(tokens: Array[String]): List[DataSet] = {
+    val positionalEmbeddings = computePositionalEmbedding(windowSize)
     val res = (0 until tokens.length - windowSize by slideLength).map { i =>
       // Extract input window (windowSize tokens)
       val inputWindow = tokens.slice(i, i + windowSize)
@@ -61,15 +54,13 @@ object SlidingWindow {
       val inputEmbeddings = tokenizeAndEmbed(inputWindow)
 
       // Add positional embeddings to word embeddings
-      val positionalEmbeddings = computePositionalEmbedding(windowSize)
       val positionAwareEmbedding = inputEmbeddings.add(positionalEmbeddings)
 
       // Convert the target token into an embedding
       val targetEmbedding = tokenizeAndEmbed(Array(targetToken))
-      //println(positionAwareEmbedding, targetEmbedding)
+
       // Add to dataset
-      println(positionAwareEmbedding, targetEmbedding)
-      new DataSet(positionAwareEmbedding, targetEmbedding)
+      new DataSet(positionAwareEmbedding.reshape(1, 300, 100), targetEmbedding)
     }.toList
     res
   }
