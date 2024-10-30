@@ -59,7 +59,7 @@ object Main {
 
     val inputPath = "src/main/resources/ulyss12-sharded.txt"
     val embeddingPath = "src/main/resources/embeddings.txt"
-    val statsFilePath = "results/training-stats.txt"
+    val statsFilePath = "results/training-stats"
     val outputPath = "results/model.zip"
 
     // embeddings
