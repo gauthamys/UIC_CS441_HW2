@@ -1,9 +1,22 @@
-// For more information on writing tests, see
-// https://scalameta.org/munit/docs/getting-started.html
+import com.typesafe.config.ConfigFactory
+
 class MySuite extends munit.FunSuite {
-  test("example test that succeeds") {
-    val obtained = 42
-    val expected = 42
-    assertEquals(obtained, expected)
+  private val conf = ConfigFactory.load()
+  private val windowSize = conf.getInt("SlidingWindow.windowSize")
+
+  test("converting array to embedding"){
+    true
+  }
+  test("sliding window shape test") {
+    true
+  }
+  test("StrUtil clean test") {
+    true
+  }
+  test("embedding loading test") {
+    true
+  }
+  test("local training test") {
+    true
   }
 }
