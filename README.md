@@ -19,16 +19,25 @@ and finally train a distributed LLM and monitor training metrics.
 - Scala v2.13.12
 - SBT v1.10.2
 
-## Training Parameters and Frameworks
-- Dataset - Books from Project Gutenberg
-- Preprocessing Strategy - Remove punctuation, numbers and force to lowercase, tokenise
-- Training - Dl4j-spark
-- Testing Framework - munit
-- Config - TypeSafe Config
-- Logging - Sl4j
+## Training Parameters, Frameworks and Dataset
+- Parameters
+  - Window Size - 300
+  - Slide Length - 100
+  - Total number of sliding windows - 2678
+  - Layers - LSTM, RNN Layers
+  - Vocabulary - ~29,000 words <br /><br />
+- Frameworks:
+  - Tokenization - Jtokkit
+  - Training - Dl4j-spark
+  - Testing - munit
+  - Config - TypeSafe Config
+  - Logging - Sl4j <br /><br />
+- Dataset:
+  - Ulysses Text from Project Gutenberg
 
 
 ## Data Flow and Logic
+![data-flow.png](images/data-flow.png)
 
 ## EMR Flow
 Explained in the YouTube video linked above
@@ -41,6 +50,25 @@ sbt test
 ```
 
 ## Results
+Results such as training stats and the actual trained model can be found in `/results`
 
 ## Usage
+1. Clone this repository, cd into the root and run 
+```angular2html
+sbt clean compile update assembly
+```
+This should install all the dependencies and create the jar file named `hw2.jar` in the `/target/scala-2.12` directory
 
+2. Make sure Spark is running, and submit the jar as a spark job
+```
+ spark-submit \
+    --class Main \
+    --driver-memory 12g \
+    --master "local[*]" \
+    target/scala-2.12/hw2.jar \
+    src/main/resources/ulyss12-sharded.txt \
+    src/main/resources/embeddings.txt \
+    <output path for saving training stats>< \
+    <output path for saving the model>
+
+```
