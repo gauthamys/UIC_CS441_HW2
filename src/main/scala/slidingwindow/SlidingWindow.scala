@@ -60,7 +60,7 @@ object SlidingWindow {
       val targetEmbedding = tokenizeAndEmbed(Array(targetToken))
 
       // Add to dataset
-      new DataSet(positionAwareEmbedding.reshape(1, 300, 100), targetEmbedding)
+      new DataSet(positionAwareEmbedding.reshape(1, 300, 100), targetEmbedding.reshape(1, 1, 100))
     }.toList
     res
   }
