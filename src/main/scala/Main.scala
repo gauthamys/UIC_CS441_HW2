@@ -51,16 +51,17 @@ object Main {
     val conf = new SparkConf().setAppName("llm-training").setMaster("local[2]").set("spark.executor.memory", "6g")
     val sc = new SparkContext(conf)
 
-//    val inputPath = args(0)
-//    val embeddingPath = args(1)
-//    val statsFilePath = args(2)
-//    val outputPath = args(3)
-//    val sentences = sc.textFile(inputPath)
+    // FOR EMR
+    val inputPath = args(0)
+    val embeddingPath = args(1)
+    val statsFilePath = args(2)
+    val outputPath = args(3)
 
-    val inputPath = "src/main/resources/ulyss12-sharded.txt"
-    val embeddingPath = "src/main/resources/embeddings.txt"
-    val statsFilePath = "results/training-stats"
-    val outputPath = "results/model.zip"
+      // LOCAL EXECUTION
+//    val inputPath = "src/main/resources/ulyss12-sharded.txt"
+//    val embeddingPath = "src/main/resources/embeddings.txt"
+//    val statsFilePath = "results/training-stats"
+//    val outputPath = "results/model.zip"
 
     // embeddings
     val lookup = loadEmbeddings(embeddingPath, sc).value

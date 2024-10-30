@@ -55,7 +55,10 @@ Results such as training stats and the actual trained model can be found in `/re
 ## Usage
 1. Clone this repository, cd into the root and run 
 ```angular2html
-sbt clean compile update assembly
+sbt update
+```
+```angular2html
+sbt clean compile assembly
 ```
 This should install all the dependencies and create the jar file named `hw2.jar` in the `/target/scala-2.12` directory
 
