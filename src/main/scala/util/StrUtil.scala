@@ -3,7 +3,7 @@ package util
 import com.knuddels.jtokkit.Encodings
 import com.knuddels.jtokkit.api.EncodingType
 
-class StrUtil extends java.io.Serializable{
+object StrUtil extends java.io.Serializable{
   private val registry = Encodings.newDefaultEncodingRegistry()
   private val encoding = registry.getEncoding(EncodingType.CL100K_BASE)
 

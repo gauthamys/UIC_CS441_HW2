@@ -1,20 +1,19 @@
 package slidingwindow
 
 import com.typesafe.config.ConfigFactory
-import embeddingloader.EmbeddingLoader
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.dataset.DataSet
 import org.nd4j.linalg.factory.Nd4j
 
+import java.util
 import scala.collection.convert.ImplicitConversions.`map AsScala`
 
 object SlidingWindow {
   private val conf = ConfigFactory.load()
   private val windowSize = conf.getInt("SlidingWindow.windowSize")
   private val slideLength = conf.getInt("SlidingWindow.slideLength")
-  private val lookup = EmbeddingLoader.load()
 
-  private def tokenizeAndEmbed(tokens: Array[String]): INDArray = {
+  private def tokenizeAndEmbed(tokens: Array[String], lookup: util.HashMap[String, Array[Double]]): INDArray = {
     // get embedding from hw1
     val embeddingMatrix = Nd4j.zeros(tokens.length, 100)
     for (i <- tokens.indices) {
@@ -41,7 +40,7 @@ object SlidingWindow {
   }
 
   // Create sliding windows for inputs and targets with positional embeddings
-  def createSlidingWindowsWithPositionalEmbedding(tokens: Array[String]): List[DataSet] = {
+  def createSlidingWindowsWithPositionalEmbedding(tokens: Array[String], lookup: util.HashMap[String, Array[Double]]): List[DataSet] = {
     val positionalEmbeddings = computePositionalEmbedding(windowSize)
     val res = (0 until tokens.length - windowSize by slideLength).map { i =>
       // Extract input window (windowSize tokens)
@@ -51,13 +50,13 @@ object SlidingWindow {
       val targetToken = tokens(i + windowSize)
 
       // Convert input tokens into embeddings
-      val inputEmbeddings = tokenizeAndEmbed(inputWindow)
+      val inputEmbeddings = tokenizeAndEmbed(inputWindow, lookup)
 
       // Add positional embeddings to word embeddings
       val positionAwareEmbedding = inputEmbeddings.add(positionalEmbeddings)
 
       // Convert the target token into an embedding
-      val targetEmbedding = tokenizeAndEmbed(Array(targetToken))
+      val targetEmbedding = tokenizeAndEmbed(Array(targetToken), lookup)
 
       // Add to dataset
       new DataSet(positionAwareEmbedding.reshape(1, 300, 100), targetEmbedding.reshape(1, 1, 100))
