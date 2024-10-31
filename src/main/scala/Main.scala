@@ -7,6 +7,7 @@ import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
 import org.deeplearning4j.spark.impl.paramavg.ParameterAveragingTrainingMaster
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.dataset.DataSet
+import org.slf4j.LoggerFactory
 import slidingwindow.SlidingWindow
 import transformer.TransformerModel
 import util.StrUtil
@@ -19,6 +20,7 @@ object Main {
   private val conf = ConfigFactory.load()
   private val batchSize = conf.getInt("Training.batchSize")
   private val numEpochs = conf.getInt("Training.numEpochs")
+  private val logger = LoggerFactory.getLogger(this.getClass.getName)
 
   private def createRDDFromData(data: List[DataSet], sc: SparkContext): RDD[DataSet] = {
     // Parallelize your data into a distributed RDD
@@ -42,9 +44,11 @@ object Main {
     val outputPath = "results/model.zip"
 
     // embeddings
+    logger.info("Loading Embeddings from HW1")
     val lookup = EmbeddingUtil.loadEmbeddings(embeddingPath, sc).value
 
     // sliding windows
+    logger.info("Creating Sliding Windows from sharded input")
     val sentences = sc.textFile(inputPath)
     val slidingWindows = sentences
       .flatMap(sentence => {
@@ -53,6 +57,7 @@ object Main {
       })
       .collect()
       .toList
+    logger.info("Generated " + slidingWindows.length + " sliding window examples")
 
     // batched data
     val merged = DataSet.merge(slidingWindows.asJava)
@@ -67,6 +72,8 @@ object Main {
       .collectTrainingStats(true)
       .batchSizePerWorker(1)
       .build()
+
+    logger.info("Spark model initialised")
     val sparkModel = new SparkDl4jMultiLayer(sc, transformerConfig, trainingMaster)
 
     // Set a listener to print score every 10 iterations
@@ -76,20 +83,21 @@ object Main {
 
     // Train the model on the RDD
     val slidingWindowRDD = createRDDFromData(batched, sc)
-    println(slidingWindowRDD.count())
 
-    for (_ <- 0 until numEpochs){
+    logger.info("Starting training")
+    for (i <- 0 until numEpochs){
       val start = System.currentTimeMillis()
       sparkModel.fit(slidingWindowRDD)
       val end = System.currentTimeMillis()
-      println(s"Epoch time: ${end - start}ms")
+      logger.info(s"Epoch ${i + 1} time: ${end - start}ms")
     }
-    println("Training complete.")
+    logger.info("Training complete.")
 
     val network = sparkModel.getNetwork
     ModelSerializer.writeModel(network, outputPath, true)
+    logger.info(s"Saved model to $outputPath")
     sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
-
+    logger.info(s"Saved stats to $statsFilePath")
     sc.stop()
   }
 }
