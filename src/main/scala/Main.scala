@@ -32,16 +32,16 @@ object Main {
     val sc = new SparkContext(conf)
 
     // FOR EMR
-//    val inputPath = args(0)
-//    val embeddingPath = args(1)
-//    val statsFilePath = args(2)
-//    val outputPath = args(3)
+    val inputPath = args(0)
+    val embeddingPath = args(1)
+    val statsFilePath = args(2)
+    val outputPath = args(3)
 
       // LOCAL EXECUTION
-    val inputPath = "src/main/resources/ulyss12-sharded.txt"
-    val embeddingPath = "src/main/resources/embeddings.txt"
-    val statsFilePath = "results/training-stats"
-    val outputPath = "results/model.zip"
+//    val inputPath = "src/main/resources/ulyss12-sharded.txt"
+//    val embeddingPath = "src/main/resources/embeddings.txt"
+//    val statsFilePath = "results/training-stats"
+//    val outputPath = "results/model.zip"
 
     // embeddings
     logger.info("Loading Embeddings from HW1")
@@ -65,7 +65,7 @@ object Main {
 
     // Create the Transformer model configuration
     val transformerConfig = TransformerModel.load()
-
+    
     // Wrap the model configuration with SparkDl4jMultiLayer for distributed training
     val trainingMaster = new ParameterAveragingTrainingMaster.Builder(1)
       .rngSeed(123)
@@ -98,6 +98,10 @@ object Main {
     logger.info(s"Saved model to $outputPath")
     sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
     logger.info(s"Saved stats to $statsFilePath")
+
+    sc.getExecutorMemoryStatus.toArray.foreach(item => {
+      logger.info(s"Memory for ${item._1}: ${item._2.toString()}")
+    })
     sc.stop()
   }
 }
