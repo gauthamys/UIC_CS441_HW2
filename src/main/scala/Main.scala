@@ -1,9 +1,6 @@
-import com.knuddels.jtokkit.Encodings
-import com.knuddels.jtokkit.api.EncodingType
 import com.typesafe.config.ConfigFactory
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
-import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.deeplearning4j.optimize.listeners.{PerformanceListener, ScoreIterationListener}
 import org.deeplearning4j.spark.impl.multilayer.SparkDl4jMultiLayer
@@ -15,7 +12,6 @@ import transformer.TransformerModel
 import util.StrUtil
 import util.EmbeddingUtil
 
-import java.util
 import scala.jdk.CollectionConverters.{collectionAsScalaIterableConverter, seqAsJavaListConverter}
 
 object Main {
@@ -23,28 +19,10 @@ object Main {
   private val conf = ConfigFactory.load()
   private val batchSize = conf.getInt("Training.batchSize")
   private val numEpochs = conf.getInt("Training.numEpochs")
-  private val registry = Encodings.newDefaultEncodingRegistry()
-  private val encoding = registry.getEncoding(EncodingType.CL100K_BASE)
 
   private def createRDDFromData(data: List[DataSet], sc: SparkContext): RDD[DataSet] = {
     // Parallelize your data into a distributed RDD
     sc.parallelize(data)
-  }
-
-  private def loadEmbeddings(embeddingPath: String, sc: SparkContext): Broadcast[util.HashMap[String, Array[Double]]] = {
-    val lookup = new util.HashMap[String, Array[Double]]()
-    val wordEmbeddingsRDD = sc.textFile(embeddingPath)
-    val wordEmbeddings = wordEmbeddingsRDD
-      .map(_.split("\t"))
-      .map{ kv =>
-        val word = kv(0)
-        val embedding = EmbeddingUtil.convertToArr(kv(1))
-        (encoding.encode(word).toArray.mkString(":"), embedding)
-      }
-    wordEmbeddings.collect().foreach { case (word, embedding) =>
-      lookup.put(word, embedding)
-    }
-    sc.broadcast(lookup)
   }
 
   def main(args: Array[String]): Unit = {
@@ -52,19 +30,19 @@ object Main {
     val sc = new SparkContext(conf)
 
     // FOR EMR
-    val inputPath = args(0)
-    val embeddingPath = args(1)
-    val statsFilePath = args(2)
-    val outputPath = args(3)
+//    val inputPath = args(0)
+//    val embeddingPath = args(1)
+//    val statsFilePath = args(2)
+//    val outputPath = args(3)
 
       // LOCAL EXECUTION
-//    val inputPath = "src/main/resources/ulyss12-sharded.txt"
-//    val embeddingPath = "src/main/resources/embeddings.txt"
-//    val statsFilePath = "results/training-stats"
-//    val outputPath = "results/model.zip"
+    val inputPath = "src/main/resources/ulyss12-sharded.txt"
+    val embeddingPath = "src/main/resources/embeddings.txt"
+    val statsFilePath = "results/training-stats"
+    val outputPath = "results/model.zip"
 
     // embeddings
-    val lookup = loadEmbeddings(embeddingPath, sc).value
+    val lookup = EmbeddingUtil.loadEmbeddings(embeddingPath, sc).value
 
     // sliding windows
     val sentences = sc.textFile(inputPath)

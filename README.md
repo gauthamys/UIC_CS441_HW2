@@ -71,7 +71,7 @@ This should install all the dependencies and create the jar file named `hw2.jar`
     target/scala-2.12/hw2.jar \
     src/main/resources/ulyss12-sharded.txt \
     src/main/resources/embeddings.txt \
-    <output path for saving training stats>< \
+    <output path for saving training stats> \
     <output path for saving the model>
 
 ```
