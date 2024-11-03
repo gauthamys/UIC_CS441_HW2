@@ -91,10 +91,10 @@ object Main {
     logger.info(s"Learning Rate (LSTM): ${network.getLearningRate(0)}")
     logger.info(s"Learning Rate (RNN Output): ${network.getLearningRate(1)}")
 
-    //ModelSerializer.writeModel(network, outputPath, false)
-    //logger.info(s"Saved model to $outputPath")
-    //sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
-    //logger.info(s"Saved stats to $statsFilePath")
+    ModelSerializer.writeModel(network, outputPath, false)
+    logger.info(s"Saved model to $outputPath")
+    sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
+    logger.info(s"Saved stats to $statsFilePath")
 
     sc.getExecutorMemoryStatus.toArray.foreach(item => {
       logger.info(s"Memory for ${item._1}: ${item._2.toString()}")
