@@ -37,12 +37,6 @@ object Main {
     val statsFilePath = args(2)
     val outputPath = args(3)
 
-      // LOCAL EXECUTION
-//    val inputPath = "src/main/resources/ulyss12-sharded.txt"
-//    val embeddingPath = "src/main/resources/embeddings.txt"
-//    val statsFilePath = "results/training-stats"
-//    val outputPath = "results/model.zip"
-
     // embeddings
     logger.info("Loading Embeddings from HW1")
     val lookup = EmbeddingUtil.loadEmbeddings(embeddingPath, sc).value
@@ -94,14 +88,13 @@ object Main {
     logger.info("Training complete.")
 
     val network = sparkModel.getNetwork
-    logger.info(s"Gradient: ${network.getGradient.gradient()}")
-    logger.info(s"Learning Rate (LSTM): $network.getLearningRate(0)")
-    logger.info(s"Learning Rate (RNN Output): $network.getLearningRate(1)")
+    logger.info(s"Learning Rate (LSTM): ${network.getLearningRate(0)}")
+    logger.info(s"Learning Rate (RNN Output): ${network.getLearningRate(1)}")
 
-    ModelSerializer.writeModel(network, outputPath, false)
-    logger.info(s"Saved model to $outputPath")
-    sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
-    logger.info(s"Saved stats to $statsFilePath")
+    //ModelSerializer.writeModel(network, outputPath, false)
+    //logger.info(s"Saved model to $outputPath")
+    //sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
+    //logger.info(s"Saved stats to $statsFilePath")
 
     sc.getExecutorMemoryStatus.toArray.foreach(item => {
       logger.info(s"Memory for ${item._1}: ${item._2.toString()}")
