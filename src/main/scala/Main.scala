@@ -65,7 +65,7 @@ object Main {
 
     // Create the Transformer model configuration
     val transformerConfig = TransformerModel.load()
-    
+
     // Wrap the model configuration with SparkDl4jMultiLayer for distributed training
     val trainingMaster = new ParameterAveragingTrainingMaster.Builder(1)
       .rngSeed(123)
@@ -94,7 +94,11 @@ object Main {
     logger.info("Training complete.")
 
     val network = sparkModel.getNetwork
-    ModelSerializer.writeModel(network, outputPath, true)
+    logger.info(s"Gradient: ${network.getGradient.gradient()}")
+    logger.info(s"Learning Rate (LSTM): $network.getLearningRate(0)")
+    logger.info(s"Learning Rate (RNN Output): $network.getLearningRate(1)")
+
+    ModelSerializer.writeModel(network, outputPath, false)
     logger.info(s"Saved model to $outputPath")
     sparkModel.getSparkTrainingStats.exportStatFiles(statsFilePath, sc)
     logger.info(s"Saved stats to $statsFilePath")
