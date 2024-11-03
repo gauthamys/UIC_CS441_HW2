@@ -10,7 +10,7 @@ this project demonstrates how to train an LLM.
 For the second Homework, we build a spark job to tokenise, generate sliding window examples over an input text corpus 
 and finally train a distributed LLM and monitor training metrics. 
 <br /><br />
-<b>Video Link</b>: 
+<b>Video Link</b>: https://youtu.be/JOJytdxPjxQ
 
 ## Environment
 - MacOSX ARM64
